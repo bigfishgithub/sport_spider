@@ -1,0 +1,30 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# 其他临时文件
+*.pyo
+*.pyd
+
+# 虚拟环境
+env/
+venv/
+ENV/
+.venv/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Pytest
+.cache/
+
+# 其他编辑器和IDE的文件
+*.swp
+*.swo
+*.idea/
+*.vscode/
+*.DS_Store
+*.log
+*.db
