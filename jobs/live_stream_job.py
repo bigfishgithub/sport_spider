@@ -13,9 +13,8 @@ class LiveStreamJob:
 		db = Database()
 		session = db.get_session()
 		try:
-			for item in data:
-				live_stream = LiveStreamModel(**item)
-				live_stream.insert(session)
+			live_stream = LiveStreamModel(**data)
+			live_stream.insert(session)
 		except Exception as e:
 			if session: session.rollback()
 			logger.error(e)

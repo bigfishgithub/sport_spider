@@ -14,8 +14,6 @@ class ScheduleModel(BaseModel):
 	max_id:Mapped[int] = mapped_column(Integer,default=0)
 	max_time:Mapped[int] = mapped_column(Integer,default=-1)
 	limit:Mapped[int] = mapped_column(Integer,default=1000)
-	code_id:Mapped[str] = mapped_column(Integer,default=-1)
-	pub_time:Mapped[int] = mapped_column(Integer,default=0)
 
 	def insert(self, session: Session):
 		self.save(session)

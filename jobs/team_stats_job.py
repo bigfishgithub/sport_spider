@@ -13,10 +13,8 @@ class TeamStatsJob:
 		try:
 			db = Database()
 			session = db.get_session()
-			for item in data:
-				team_stats = TeamStatsModel(**item)
-				team_stats.insert(session)
-				logger.info(f"insert data for team_stats: {item}")
+			team_stats = TeamStatsModel(**data)
+			team_stats.insert(session)
 		except Exception as e:
 			logger.error(e)
 			if session: session.rollback()

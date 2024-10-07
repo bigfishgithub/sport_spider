@@ -1,5 +1,5 @@
 import logging
-from sqlalchemy import Integer, String, SMALLINT, JSON
+from sqlalchemy import Integer, JSON
 from models.base_model import BaseModel
 from sqlalchemy.orm import Mapped, mapped_column, Session
 

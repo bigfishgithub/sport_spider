@@ -16,7 +16,6 @@ class VideoStreamJob:
 			for item in data:
 				video_stream = VideoStreamModel(**item)
 				video_stream.insert(session)
-				logger.info(f"insert data for video_stream: {item}")
 		except Exception as e:
 			logger.error(e)
 			if session: session.rollback()

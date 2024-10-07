@@ -1,6 +1,5 @@
 import logging
 
-from api.football_apis import get_match_live_update
 from database import Database
 from models.match_live_model import MatchLiveModel
 

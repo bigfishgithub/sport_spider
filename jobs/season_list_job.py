@@ -14,11 +14,8 @@ class SeasonListJob:
 		try:
 			db = Database()
 			session = db.get_session()
-			for item in data:
-				season_list = SeasonListModel(**item)
-				season_list.insert(session)
-				logger.info(f"insert data for season_list: {item}")
-			Utils.update_last_data(SeasonListModel, "season_list")
+			season_list = SeasonListModel(**data)
+			season_list.insert(session)
 
 		except Exception as e:
 			logger.error(e)

@@ -14,10 +14,8 @@ class TeamStatsUpdateJob:
 		try:
 			db = Database()
 			session = db.get_session()
-			for item in data:
-				team_stats = TeamStatsModel(**item)
-				team_stats.insert(session)
-				logger.info(f"insert data for venue_list: {item}")
+			team_stats = TeamStatsModel(**data)
+			team_stats.insert(session)
 		except Exception as e:
 			session.rollback()
 			logger.error(f"批量保存时发生错误: {e}")

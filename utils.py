@@ -1,16 +1,11 @@
-import os
-import json
 import logging
 
-from sqlalchemy import desc, cast, Integer, func
-from sqlalchemy.orm import Session
+from sqlalchemy import func
+
 from models.schedule_model import ScheduleModel
-from api.football_apis import get_language
-from config import Config
 from database import Database
 
 logger = logging.getLogger(__name__)
-from typing import List, Dict, Any
 
 
 class Utils:
@@ -41,18 +36,6 @@ class Utils:
 			session.close()
 
 	@staticmethod
-	async def get_language(lang_type, lang_id=0, lang_limit=0):
-		params = {
-			"id": lang_id,
-			"type": str(lang_type),
-			"limit": lang_limit
-		}
-		response = await get_language(params)
-		data = response['results']
-
-		return data
-
-	@staticmethod
 	def get_state_data(name):
 		session = None
 		last_fetch = None
@@ -65,3 +48,5 @@ class Utils:
 		finally:
 			session.close()
 		return last_fetch
+
+

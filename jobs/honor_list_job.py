@@ -16,7 +16,6 @@ class HonorListJob:
 			for item in data:
 				honor_list = HonorListModel(**item)
 				honor_list.insert(session)
-			Utils.update_last_data(HonorListModel, "honor_list")
 		except Exception as e:
 			if session: session.rollback()
 			logger.error(e)

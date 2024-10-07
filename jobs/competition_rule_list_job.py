@@ -13,11 +13,8 @@ class CompetitionRuleListJob:
 		db = Database()
 		session = db.get_session()
 		try:
-			for item in data:
-				competition_rule_list = CompetitionRuleListModel(**item)
-				competition_rule_list.insert(session)
-				logger.info(f"insert data for competition_rule_list: {item}")
-			Utils.update_last_data(CompetitionRuleListModel, "competition_rule_list")
+			competition_rule_list = CompetitionRuleListModel(**data)
+			competition_rule_list.insert(session)
 		except Exception as e:
 			if session: session.rollback()
 			logger.error(e)

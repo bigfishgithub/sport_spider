@@ -15,10 +15,8 @@ class StageListJob:
 		try:
 			db = Database()
 			session = db.get_session()
-			for item in data:
-				stage_list = StageListModel(**item)
-				stage_list.insert(session)
-				logger.info(f"insert data for stage_list: {item}")
+			stage_list = StageListModel(**data)
+			stage_list.insert(session)
 			Utils.update_last_data(StageListModel, "stage_list")
 		except Exception as e:
 			logger.error(e)

@@ -16,12 +16,8 @@ class RefereeListJob:
 
 			db = Database()
 			session = db.get_session()
-			for item in data:
-				print("===================================",item,"=========================")
-				referee_list = RefereeListModel(**item)
-				referee_list.insert(session)
-				logger.info(f"insert data for referee_list:{item}")
-			Utils.update_last_data(RefereeListModel, "referee_list")
+			referee_list = RefereeListModel(**data)
+			referee_list.insert(session)
 		except Exception as ee:
 			logger.error(ee)
 			if session: session.rollback()

@@ -34,7 +34,6 @@ class DeleteJob:
 		session = db.get_session()
 		try:
 			TeamListModel.delete(session, data)
-			logger.info(f'Deleted team list{data}')
 		except Exception as e:
 			logger.error(e)
 		finally:
@@ -98,13 +97,12 @@ class DeleteJob:
 
 	@classmethod
 	async def run(cls, data):
-		for item in data:
-			try:
-				cls.__delete_match(item.get('match'))
-				cls.__delete_team(item.get('team'))
-				cls.__delete_player(item.get('player'))
-				cls.__delete_competition(item.get('competition'))
-				cls.__delete_season(item.get('season'))
-				cls.__delete_stage(item.get('stage'))
-			except Exception as e:
-				logger.error(e)
+		try:
+			cls.__delete_match(data.get('match'))
+			cls.__delete_team(data.get('team'))
+			cls.__delete_player(data.get('player'))
+			cls.__delete_competition(data.get('competition'))
+			cls.__delete_season(data.get('season'))
+			cls.__delete_stage(data.get('stage'))
+		except Exception as e:
+			logger.error(e)

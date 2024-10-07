@@ -13,4 +13,5 @@ class CountryJob(BaseJob):
 		response = await get_country_list()
 		if response['results']:
 			data = response['results']
-			await cls.handle_lang(data, CountryModel, LanguageType.COUNTRY.value)
+			for item in data:
+				await cls.handle_lang(item, CountryModel, LanguageType.COUNTRY.value)

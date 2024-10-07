@@ -15,11 +15,9 @@ class VenueListJob:
 		try:
 			db = Database()
 			session = db.get_session()
-			for item in data:
-				venue_list = VenueListModel(**item)
-				venue_list.insert(session)
-				logger.info(f"insert data for venue_list: {item}")
-			Utils.update_last_data(VenueListModel, "venue_list")
+			venue_list = VenueListModel(**data)
+			venue_list.insert(session)
+
 		except Exception as e:
 			logger.error(e)
 			if session: session.rollback()

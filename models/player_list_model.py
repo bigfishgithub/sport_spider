@@ -47,3 +47,7 @@ class PlayerListModel(BaseModel):
 		self.save(session)
 		logger.info(f"sport_player: 新增数据1条")
 
+	@classmethod
+	def get_player(cls,session,id):
+		return session.query(cls).filter(PlayerListModel.id == id).first()
+
