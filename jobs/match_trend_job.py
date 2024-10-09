@@ -11,39 +11,20 @@ logger = logging.getLogger(__name__)
 class MatchTrendJob:
 
 	@classmethod
-	async def run(cls):
-		# 获取未开赛30天的数据
-		time = 60 * 60 * 24 * 30
-		today = date.today()
-		dt = datetime.combine(today, datetime.min.time())
-		now = int(dt.timestamp())
-
-		session = None
-		ids = []
-		try:
-			db = Database()
-			session = db.get_session()
-			ids = MatchListModel.get_30dyas_date_ids(session, now, now + time, 3)
-		except Exception as e:
-			logger.error(e)
-		finally:
-			if session: session.close()
-
-		id_list = [id_value[0] for id_value in ids]
-		for match_id in id_list:
-			response = await get_match_trend({"id": match_id})
-			if response['results']:
-				data = response['results']
-				session = None
-				try:
-					db = Database()
-					session = db.get_session()
-					data['match_id'] = match_id
-					match_trend = MatchTrendModel(**data)
-					match_trend.insert(session)
-				except Exception as e:
-					logger.error(e)
-					if session: session.rollback()
-				finally:
-					if session: session.close()
-
+	async def run(cls, ids):
+		match_id = ids[0]
+		response = await get_match_trend({"id": match_id})
+		if response['results']:
+			data = response['results']
+			session = None
+			try:
+				db = Database()
+				session = db.get_session()
+				data['match_id'] = match_id
+				match_trend = MatchTrendModel(**data)
+				match_trend.insert(session)
+			except Exception as e:
+				logger.error(e)
+				if session: session.rollback()
+			finally:
+				if session: session.close()

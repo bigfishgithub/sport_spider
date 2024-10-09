@@ -17,8 +17,8 @@ class Consumer:
 		self.queue = get_queue(identifier)
 
 	async def consume(self):
-		# 创建 50 个并发工作任务
-		workers = [asyncio.create_task(self.worker()) for _ in range(10)]
+		# 创建 10 个并发工作任务
+		workers = [asyncio.create_task(self.worker()) for _ in range(20)]
 		await asyncio.gather(*workers)  # 等待所有工作协程完成
 
 	async def worker(self):
@@ -31,19 +31,18 @@ class Consumer:
 				if not data:
 					logger.warning(f"Data for {self.identifier} is not a recognized format, skipping...")
 					continue
-
-				await self.process_funcs(data[1])  # 处理数据
-				self.queue.task_done()  # 标记任务完成
+				await self.process_funcs(data[1])
+				self.queue.task_done()
 
 			except Exception as e:
 				logger.error(f"Error processing data for: {e}")
 
 			finally:
 				update_list = ['player_list', 'match_list', 'coach_list', 'competition_list', 'competition_rule_list',
-				               'honor_list', 'referee_list', 'season_list','venue_list','compensation_list']
+				               'honor_list', 'referee_list', 'season_list', 'venue_list', 'compensation_list']
 				if self.identifier in update_list:
 					Utils.update_last_data(MatchListModel, self.identifier)
-				# 通知生产者当前消费任务完成
-				self.processing_done_event.set()
-				await self.processing_done_event.wait()  # 等待生产者的通知
-				self.processing_done_event.clear()
+
+				# 当所有数据处理完时，通知生产者
+				if self.queue.empty():
+					self.processing_done_event.set()

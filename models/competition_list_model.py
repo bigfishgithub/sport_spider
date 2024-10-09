@@ -1,8 +1,7 @@
 import logging
-from sqlalchemy import Integer, String, JSON
+from sqlalchemy import Integer, String, JSON, and_
 from sqlalchemy.orm import mapped_column, Mapped, Session
 from models.base_model import BaseModel
-
 logger = logging.getLogger(__name__)
 
 
@@ -33,5 +32,10 @@ class CompetitionListModel(BaseModel):
 	def insert(self, session: Session):
 		self.save(session)
 		logger.info(f"sport_competition: 新增数据1条")
+
+	@classmethod
+	def get_edge_ids(cls,session: Session,competition_id):
+		return session.query(cls.id).filter(and_(cls.id > competition_id, cls.type < 3)).all()
+
 
 

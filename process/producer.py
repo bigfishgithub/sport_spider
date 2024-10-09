@@ -35,9 +35,8 @@ class Producer:
                         await self.queue.put((self.identifier, data))
 
                 if has_data:
-                    # 如果有数据，等待消费者处理完
-                    await self.processing_done_event.wait()
-                    self.processing_done_event.clear()
+                    # 等待消费者处理完队列中的数据
+                    await self.queue.join()
                 else:
                     # 如果没有数据，直接等待下一个周期
                     logger.info(f"No data to process for {self.identifier}, waiting for the next interval...")
