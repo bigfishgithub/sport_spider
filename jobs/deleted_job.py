@@ -20,7 +20,6 @@ class DeleteJob:
 		session = db.get_session()
 		try:
 			MatchListModel.delete(session, data)
-			logger.info(f'Deleted match list{data}')
 		except Exception as e:
 			logger.error(e)
 		finally:
@@ -47,7 +46,6 @@ class DeleteJob:
 		session = db.get_session()
 		try:
 			PlayerListModel.delete(session, data)
-			logger.info(f'Deleted player list{data}')
 		except Exception as e:
 			logger.error(e)
 		finally:
@@ -61,7 +59,6 @@ class DeleteJob:
 		session = db.get_session()
 		try:
 			CompetitionListModel.delete(session, data)
-			logger.info(f'Deleted competition list{data}')
 		except Exception as e:
 			logger.error(e)
 		finally:
@@ -75,7 +72,6 @@ class DeleteJob:
 		session = db.get_session()
 		try:
 			SeasonListModel.delete(session, data)
-			logger.info(f'Deleted season list{data}')
 		except Exception as e:
 			logger.error(e)
 		finally:
@@ -89,7 +85,6 @@ class DeleteJob:
 		session = db.get_session()
 		try:
 			StageListModel.delete(session, data)
-			logger.info(f'Deleted stage list{data}')
 		except Exception as e:
 			logger.error(e)
 		finally:

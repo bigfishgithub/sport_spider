@@ -12,5 +12,4 @@ async def player_status_update_fetch():
 			yield response['results']
 	except Exception as e:
 		logger.error(e)
-		pass
 

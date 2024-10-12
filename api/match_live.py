@@ -1,4 +1,5 @@
 import logging
+import time
 from datetime import datetime, date
 
 from api.football_apis import get_match_live
@@ -16,22 +17,15 @@ async def match_live_fetch():
 	max_t = int(dt.timestamp()) + 60 * 60 * 24
 	min_t = max_t - t
 	session = None
-	ids = []
 	try:
 		db = Database()
 		session = db.get_session()
-		ids = MatchListModel.get_30dyas_date_ids(session, min_t, max_t, 2)
+		ids = MatchListModel.get_30dyas_date_ids(session, min_t,int(time.time()))
+		yield ids
 	except Exception as e:
 		logger.error(e)
 	finally:
 		if session: session.close()
 
-	id_list = [id_value[0] for id_value in ids]
-	for match_id in id_list:
-		try:
-			response = await get_match_live({"id": match_id})
-			if response['results']:
-				yield response['results']
-		except Exception as e:
-			logger.error(f"match_list_fetch: {e}")
+
 

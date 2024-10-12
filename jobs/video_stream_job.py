@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 class VideoStreamJob:
 	@classmethod
 	async def run(cls, data):
-
 		session = None
 		try:
 			db = Database()

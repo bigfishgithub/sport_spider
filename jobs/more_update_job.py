@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class MoreUpdateJob(BaseJob):
 	@classmethod
-	async def __handle_single_lineup(cls,data):
+	async def __handle_single_lineup(cls, data):
 		for item in data:
 			params = {"id": item['match_id'], "time": 0, "limit": 1000}
 			response = await get_match_lineup(params)
@@ -32,7 +32,7 @@ class MoreUpdateJob(BaseJob):
 				try:
 					db = Database()
 					session = db.get_session()
-					resdata['match_id'] = data['match_id']
+					resdata['match_id'] = item['match_id']
 
 					if resdata.get('home'):
 						for sub_item in resdata['home']:
@@ -41,92 +41,94 @@ class MoreUpdateJob(BaseJob):
 							sub_item['name_vi'] = player.name_vi or player.name_en
 							sub_item['name_en'] = player.name_en
 							if sub_item.get('incidents'):
-								if sub_item['incidents'].get('player'):
-									player_id = sub_item['incidents'].get('player').get('id')
-									player = PlayerListModel.get_player(session, player_id)
-									if player is None:
-										player = await cls.supplement_player_data(player_id)
-									sub_item['incidents']['player']['name_vi'] = player.name_vi
-									sub_item['incidents']['player']['name_en'] = player.name_en
-								if sub_item['incidents'].get('in_player'):
-									player_id = sub_item['incidents'].get('in_player').get('id')
-									player = PlayerListModel.get_player(session, player_id)
-									if player is None:
-										player = await cls.supplement_player_data(player_id)
-									sub_item['incidents']['in_player']['name_vi'] = player.name_vi
-									sub_item['incidents']['in_player']['name_en'] = player.name_en
-								if sub_item['incidents'].get('out_player'):
-									player_id = sub_item['incidents'].get('out_player').get('id')
-									player = PlayerListModel.get_player(session, player_id)
-									if player is None:
-										player = await cls.supplement_player_data(player_id)
-									sub_item['incidents']['out_player']['name_vi'] = player.name_vi
-									sub_item['incidents']['out_player']['name_en'] = player.name_en
-								if sub_item['incidents'].get('assist1'):
-									player_id = sub_item['incidents'].get('assist1').get('id')
-									player = PlayerListModel.get_player(session, player_id)
-									if player is None:
-										player = await cls.supplement_player_data(player_id)
-									sub_item['incidents']['assist1']['name_vi'] = player.name_vi
-									sub_item['incidents']['assist1']['name_en'] = player.name_en
+								for incident in sub_item['incidents']:
+									if incident.get('player'):
+										player_id = incident.get('player').get('id')
+										player = PlayerListModel.get_player(session, player_id)
+										print(player)
+										if not player:
+											player = await cls.supplement_player_data(player_id)
+										incident['player']['name_vi'] = player.name_vi
+										incident['player']['name_en'] = player.name_en
+									if incident.get('in_player'):
+										player_id = incident.get('in_player').get('id')
+										player = PlayerListModel.get_player(session, player_id)
+										if not player:
+											player = await cls.supplement_player_data(player_id)
+										incident['in_player']['name_vi'] = player.name_vi
+										incident['in_player']['name_en'] = player.name_en
+									if incident.get('out_player'):
+										player_id = incident.get('out_player').get('id')
+										player = PlayerListModel.get_player(session, player_id)
+										if not player:
+											player = await cls.supplement_player_data(player_id)
+										incident['out_player']['name_vi'] = player.name_vi
+										incident['out_player']['name_en'] = player.name_en
+									if incident.get('assist1'):
+										player_id = incident.get('assist1').get('id')
+										player = PlayerListModel.get_player(session, player_id)
+										if not player:
+											player = await cls.supplement_player_data(player_id)
+										incident['assist1']['name_vi'] = player.name_vi
+										incident['assist1']['name_en'] = player.name_en
 
-								if sub_item['incidents'].get('assist2'):
-									player_id = sub_item['incidents'].get('assist2').get('id')
-									player = PlayerListModel.get_player(session, player_id)
-									if player is None:
-										player = await cls.supplement_player_data(player_id)
-									sub_item['incidents']['assist2']['name_vi'] = player.name_vi
-									sub_item['incidents']['assist2']['name_en'] = player.name_en
+									if incident.get('assist2'):
+										player_id = incident.get('assist2').get('id')
+										player = PlayerListModel.get_player(session, player_id)
+										if not player:
+											player = await cls.supplement_player_data(player_id)
+										incident['assist2']['name_vi'] = player.name_vi
+										incident['assist2']['name_en'] = player.name_en
 					if resdata.get('away'):
 						for sub_item in resdata['away']:
 							player_id = sub_item.get("id")
 							player = PlayerListModel.get_player(session, player_id)
-							if player is None:
+							if not player:
 								player = await cls.supplement_player_data(player_id)
 							sub_item['name_vi'] = player.name_vi or player.name_en
 							sub_item['name_en'] = player.name_en
 							if sub_item.get('incidents'):
-								if sub_item['incidents'].get('player'):
-									player_id = sub_item['incidents'].get('player').get('id')
-									player = PlayerListModel.get_player(session, player_id)
-									if player is None:
-										player = await cls.supplement_player_data(player_id)
-									sub_item['incidents']['player']['name_vi'] = player.name_vi
-									sub_item['incidents']['player']['name_en'] = player.name_en
-								if sub_item['incidents'].get('in_player'):
-									player_id = sub_item['incidents'].get('in_player').get('id')
-									player = PlayerListModel.get_player(session, player_id)
-									if player is None:
-										player = await cls.supplement_player_data(player_id)
-									sub_item['incidents']['in_player']['name_vi'] = player.name_vi
-									sub_item['incidents']['in_player']['name_en'] = player.name_en
-								if sub_item['incidents'].get('out_player'):
-									player_id = sub_item['incidents'].get('out_player').get('id')
-									player = PlayerListModel.get_player(session, player_id)
-									if player is None:
-										player = await cls.supplement_player_data(player_id)
-									sub_item['incidents']['out_player']['name_vi'] = player.name_vi
-									sub_item['incidents']['out_player']['name_en'] = player.name_en
-								if sub_item['incidents'].get('assist1'):
-									player_id = sub_item['incidents'].get('assist1').get('id')
-									player = PlayerListModel.get_player(session, player_id)
-									if player is None:
-										player = await cls.supplement_player_data(player_id)
-									sub_item['incidents']['assist1']['name_vi'] = player.name_vi
-									sub_item['incidents']['assist1']['name_en'] = player.name_en
+								for incident in sub_item['incidents']:
+									if incident.get('player'):
+										player_id = incident.get('player').get('id')
+										player = PlayerListModel.get_player(session, player_id)
+										if not player:
+											player = await cls.supplement_player_data(player_id)
+										incident['player']['name_vi'] = player.name_vi
+										incident['player']['name_en'] = player.name_en
+									if incident.get('in_player'):
+										player_id = incident.get('in_player').get('id')
+										player = PlayerListModel.get_player(session, player_id)
+										if not player:
+											player = await cls.supplement_player_data(player_id)
+										incident['in_player']['name_vi'] = player.name_vi
+										incident['in_player']['name_en'] = player.name_en
+									if incident.get('out_player'):
+										player_id = incident.get('out_player').get('id')
+										player = PlayerListModel.get_player(session, player_id)
+										if not player:
+											player = await cls.supplement_player_data(player_id)
+										incident['out_player']['name_vi'] = player.name_vi
+										incident['out_player']['name_en'] = player.name_en
+									if incident.get('assist1'):
+										player_id = incident.get('assist1').get('id')
+										player = PlayerListModel.get_player(session, player_id)
+										if not player:
+											player = await cls.supplement_player_data(player_id)
+										incident['assist1']['name_vi'] = player.name_vi
+										incident['assist1']['name_en'] = player.name_en
 
-								if sub_item['incidents'].get('assist2'):
-									player_id = sub_item['incidents'].get('assist2').get('id')
-									player = PlayerListModel.get_player(session, player_id)
-									if player is None:
-										player = await cls.supplement_player_data(player_id)
-									sub_item['incidents']['assist2']['name_vi'] = player.name_vi
-									sub_item['incidents']['assist2']['name_en'] = player.name_en
+									if incident.get('assist2'):
+										player_id = incident.get('assist2').get('id')
+										player = PlayerListModel.get_player(session, player_id)
+										if player:
+											player = await cls.supplement_player_data(player_id)
+										incident['assist2']['name_vi'] = player.name_vi
+										incident['assist2']['name_en'] = player.name_en
 					match_lineup_model = MatchLineupModel(**resdata)
 					match_lineup_model.insert(session)
 				except Exception as e:
 					logger.error(e)
-					print(type(resdata))
 					logger.error(f"{resdata}------__handle_single_lineup-------{item}")
 					if session: session.rollback()
 				finally:
@@ -194,45 +196,41 @@ class MoreUpdateJob(BaseJob):
 				teams_stats_list = [
 					{"competition_id": item['competition_id'], "season_id": item['season_id'], **val} for
 					val in teams_stats]
-
-				for players_stat in player_stats_list:
-					session = None
-					try:
-						db = Database()
-						session = db.get_session()
+				session = None
+				try:
+					db = Database()
+					session = db.get_session()
+					for players_stat in player_stats_list:
 						players_stats = CompetitionPlayerStatsModel(**players_stat)
 						players_stats.insert(session)
-					except Exception as e:
-						logger.error(e)
-						logger.error(f"{players_stat}-------player_stats_list------{item}")
-						if session: session.rollback()
-					finally:
-						if session: session.close()
+				except Exception as e:
+					logger.error(e)
+					if session: session.rollback()
+				finally:
+					if session: session.close()
 
-				for shooters_stat in shooters_list:
 					session = None
 					try:
 						db = Database()
 						session = db.get_session()
-						comtition_shotters_stats = CompetitionShottersStatsModel(**shooters_stat)
-						comtition_shotters_stats.insert(session)
+						for shooters_stat in shooters_list:
+							comtition_shotters_stats = CompetitionShottersStatsModel(**shooters_stat)
+							comtition_shotters_stats.insert(session)
 					except Exception as e:
 						logger.error(e)
-						logger.error(f"{shooters_stat}-------shooters_list------{item}")
 						if session: session.rollback()
 					finally:
 						if session: session.close()
 
-				for teams_stat in teams_stats_list:
 					session = None
 					try:
 						db = Database()
 						session = db.get_session()
-						competition_team_stats = CompetitionTeamStatsModel(**teams_stat)
-						competition_team_stats.insert(session)
+						for teams_stat in teams_stats_list:
+							competition_team_stats = CompetitionTeamStatsModel(**teams_stat)
+							competition_team_stats.insert(session)
 					except Exception as e:
 						logger.error(e)
-						logger.error(f"{teams_stat}------teams_stats_list-------{item}")
 						if session: session.rollback()
 					finally:
 						if session: session.close()

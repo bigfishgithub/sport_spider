@@ -27,7 +27,7 @@ class MatchAnalysisJob:
 		try:
 			db = Database()
 			session = db.get_session()
-			ids = MatchListModel.get_30dyas_date_ids(session, now, now + time, 1)
+			ids = MatchListModel.get_30dyas_date_ids(session, now, now + time)
 		except Exception as e:
 			logger.error(e)
 		finally:

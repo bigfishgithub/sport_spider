@@ -17,21 +17,14 @@ async def team_stats_fetch():
 	min_t = max_t - t
 
 	session = None
-	ids = []
 	try:
 		db = Database()
 		session = db.get_session()
-		ids = MatchListModel.get_30dyas_date_ids(session, min_t, max_t, 2)
+		ids = MatchListModel.get_30dyas_date_ids(session, min_t, max_t)
+		yield ids
 	except Exception as e:
 		logger.error(e)
 	finally:
 		session.close()
 
-	id_list = [id_value[0] for id_value in ids]
-	for match_id in id_list:
-		try:
-			response = await get_team_stats({"id": match_id})
-			if response['results']:
-				yield response['results']
-		except Exception as e:
-			logger.error(e)
+

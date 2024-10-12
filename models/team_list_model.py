@@ -37,4 +37,8 @@ class TeamListModel(BaseModel):
 		self.save(session)
 		logger.info(f"sport_team: 新增数据1条")
 
+	@classmethod
+	def hasData(cls,session: Session,team_id):
+		return session.query(cls).filter(cls.id == team_id).scalar()
+
 

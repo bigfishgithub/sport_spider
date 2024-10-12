@@ -1,7 +1,12 @@
+import asyncio
 import logging
+import time
+from datetime import date, datetime
+
 from api.football_apis import get_competition_list, get_competition_rule_list, get_honor_list, get_match_list, \
 	get_team_list, get_venue_list, get_player_list, get_coach, get_referee_list, get_season_list, get_stage_list, \
 	get_compensation_list
+from database import Database
 from jobs.category_job import CategoryJob
 from jobs.coach_job import CoachJob
 from jobs.compensationList_job import CompensationListJob
@@ -11,6 +16,7 @@ from jobs.country_job import CountryJob
 from jobs.honor_list_job import HonorListJob
 from jobs.match_analysis_job import MatchAnalysisJob
 from jobs.match_list_job import MatchListJob
+from jobs.match_trend_job import MatchTrendJob
 from jobs.player_list_job import PlayerListJob
 from jobs.referee_list_job import RefereeListJob
 from jobs.season_list_job import SeasonListJob
@@ -195,7 +201,6 @@ async def init_coach_list():
 					is_true = False
 			except Exception as e:
 				logger.error(f"coach_list_fetch:{e}")
-				pass
 
 
 async def init_feree_list():
@@ -293,6 +298,49 @@ async def init_match_analysis():
 async def init_category():
 	await CategoryJob.run()
 
+async def init_match_trend():
+	# 获取前30天的比赛
+	t = 60 * 60 * 24 * (30 - 1)
+	today = date.today()
+	dt = datetime.combine(today, datetime.min.time())
+	now = int(dt.timestamp())
+
+	session = None
+	ids = []
+	try:
+		db = Database()
+		session = db.get_session()
+
+		# 分批查询，每次获取 batch_size 条记录
+		ids = MatchListModel.get_30dyas_date_ids(session, now - t, time.time())
+	except Exception as e:
+		logger.error(f"Error fetching match trend data: {e}")
+	finally:
+		if session: session.close()
+
+	queue = asyncio.Queue()
+	for id_value in ids:
+		queue.put_nowait(id_value)
+
+	# 创建多个并发任务处理队列中的数据
+	workers = [asyncio.create_task(__match_trend_worker(queue)) for _ in range(50)]  # 启动50个工作协程
+	await queue.join()  # 等待所有任务完成
+
+	# 停止工作协程
+	for _ in workers:
+		await queue.put(None)  # 向队列中放入结束信号
+	await asyncio.gather(*workers)  # 等待所有工作协程完成
+
+
+async def __match_trend_worker(queue):
+	"""工作协程：从队列中获取数据并处理"""
+	while True:
+		match_id = await queue.get()  # 从队列中获取match_id
+		print(match_id)
+		if match_id is None:  # 使用None作为结束信号
+			break
+		await MatchTrendJob.run(match_id)
+		queue.task_done()  # 标记该任务已完成
 
 async def init_data():
 	await init_category()
@@ -310,3 +358,4 @@ async def init_data():
 	await init_match_list()
 	await init_honor_list()
 	await init_match_analysis()
+	await init_match_trend()

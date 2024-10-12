@@ -37,6 +37,7 @@ from jobs.honor_list_job import HonorListJob
 from jobs.live_stream_job import LiveStreamJob
 from jobs.match_list_job import MatchListJob
 from jobs.match_live_job import MatchLiveJob
+from jobs.match_live_update_job import MatchLiveUpdateJob
 from jobs.match_trend_job import MatchTrendJob
 from jobs.more_update_job import MoreUpdateJob
 from jobs.player_list_job import PlayerListJob
@@ -51,7 +52,6 @@ from jobs.team_stats_job import TeamStatsJob
 from jobs.team_stats_update_job import TeamStatsUpdateJob
 from jobs.venue_list_job import VenueListJob
 from logger import Logger
-from models.competition_list_model import CompetitionListModel
 from process.producer import Producer  # 确保导入 Producer 类
 from process.consumer import Consumer
 from database import Database
@@ -82,8 +82,13 @@ async def run_producer_and_consumer(task_config):
 		producer = Producer(config['func'], config['interval'], config['identifier'], processing_done_event)
 		producer_tasks.append(asyncio.create_task(producer.produce()))
 
+		# 创建消费者任务
 		consumer = Consumer(config['process_func'], processing_done_event, config['identifier'])
 		consumer_tasks.append(asyncio.create_task(consumer.consume()))
+
+	# 等待所有生产者和消费者任务完成
+	await asyncio.gather(*producer_tasks, *consumer_tasks)
+
 	return producer_tasks, consumer_tasks
 
 
@@ -94,32 +99,31 @@ async def main():
 		{'func': match_trend_fetch, 'interval': 1, 'identifier': 'match_trend', 'process_func': MatchTrendJob.run},
 		{'func': coach_list_fetch, 'interval': 60, 'identifier': 'coach_list', 'process_func': CoachJob.run},
 		{'func': match_list_fetch, 'interval': 1, 'identifier': 'match_list', 'process_func': MatchListJob.run},
+		{'func': team_list_fetch, 'interval': 1, 'identifier': 'team_list', 'process_func': TeamListJob.run},
 		{'func': competition_list_fetch, 'interval': 60, 'identifier': 'competition_list','process_func': CompetitionJob.run},
 		{'func': competition_rule_list_fetch, 'interval': 60, 'identifier': 'competition_rule_list','process_func': CompetitionRuleListJob.run},
 		{'func': delete_data_fetch, 'interval': 60, 'identifier': 'delete_data', 'process_func': DeleteJob.run},
 		{'func': honor_list_fetch, 'interval': 60, 'identifier': 'honor_list', 'process_func': HonorListJob.run},
 		{'func': live_stream_fetch, 'interval': 10 * 60, 'identifier': 'live_stream', 'process_func': LiveStreamJob.run},
 		{'func': match_live_fetch, 'interval': 1, 'identifier': 'match_live', 'process_func': MatchLiveJob.run},
-		{'func': match_live_update_fetch, 'interval': 60 * 2, 'identifier': 'match_live_update', 'process_func': MatchLiveJob.run},
+		{'func': match_live_update_fetch, 'interval': 5, 'identifier': 'match_live_update', 'process_func': MatchLiveUpdateJob.run},
 		{'func': more_update_fetch, 'interval': 20, 'identifier': 'more_update', 'process_func': MoreUpdateJob.run},
-		{'func': player_stats_fetch, 'interval': 1, 'identifier': 'player_status', 'process_func': PlayerStatsJob.run},
-		{'func': player_status_update_fetch, 'interval': 60, 'identifier': 'player_status_update','process_func': PlayerStatsUpdateJob.run},
+		{'func': player_stats_fetch, 'interval': 60, 'identifier': 'player_status', 'process_func': PlayerStatsJob.run},
+		{'func': player_status_update_fetch, 'interval': 1, 'identifier': 'player_status_update','process_func': PlayerStatsUpdateJob.run},
 		{'func': referee_list_fetch, 'interval': 60, 'identifier': 'referee_list', 'process_func': RefereeListJob.run},
 		{'func': season_list_fetch, 'interval': 60, 'identifier': 'season_list', 'process_func': SeasonListJob.run},
 		{'func': stage_list_fetch, 'interval': 60, 'identifier': 'stage_list', 'process_func': StageListJob.run},
 		{'func': table_detail_fetch, 'interval': 60, 'identifier': 'table_detail', 'process_func': TableDetailJob.run},
-		{'func': team_list_fetch, 'interval': 1, 'identifier': 'team_list', 'process_func': TeamListJob.run},
-		{'func': team_stats_fetch, 'interval': 1, 'identifier': 'team_stats', 'process_func': TeamStatsJob.run},
-		{'func': team_stats_update_fetch, 'interval': 60, 'identifier': 'team_stats_update', 'process_func': TeamStatsUpdateJob.run},
+		{'func': team_stats_fetch, 'interval': 60, 'identifier': 'team_stats', 'process_func': TeamStatsJob.run},
+		{'func': team_stats_update_fetch, 'interval': 1, 'identifier': 'team_stats_update', 'process_func': TeamStatsUpdateJob.run},
 		{'func': venue_list_fetch, 'interval': 60, 'identifier': 'venue_list', 'process_func': VenueListJob.run},
 		{'func': compesation_list_fetch, 'interval': 60, 'identifier': 'compesation_list', 'process_func': CompensationListJob.run},
 		{'func': competition_detail_fetch, 'interval': 1, 'identifier': 'competition_detail',
 		 'process_func': CompetitionTableDetailJob.run},
 	]
 
-
-
 	try:
+
 		# 	初始化全量数据
 		await init_data()
 		# 创建并运行生产者和消费者任务

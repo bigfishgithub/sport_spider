@@ -17,7 +17,7 @@ async def video_stream_fetch():
 	try:
 		db = Database()
 		session = db.get_session()
-		ids = MatchListModel.get_30dyas_date_ids(session, min_t, max_t, 3)
+		ids = MatchListModel.get_30dyas_date_ids(session, min_t, max_t)
 	except Exception as e:
 		logger.error(e)
 	finally:
