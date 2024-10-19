@@ -1,4 +1,5 @@
 import asyncio
+import signal
 from datetime import datetime, date
 
 from api.compesation_list import compesation_list_fetch
@@ -26,12 +27,13 @@ from api.team_stats import team_stats_fetch
 from api.team_stats_update import team_stats_update_fetch
 from api.venue_list import venue_list_fetch
 from get_all_data import init_data
+from http_client import HttpClient
 
 from jobs.coach_job import CoachJob
 from jobs.compensationList_job import CompensationListJob
 from jobs.competition_job import CompetitionJob
 from jobs.competition_rule_list_job import CompetitionRuleListJob
-from jobs.competition_table_detail_job import  CompetitionTableDetailJob
+from jobs.competition_table_detail_job import CompetitionTableDetailJob
 from jobs.deleted_job import DeleteJob
 from jobs.honor_list_job import HonorListJob
 from jobs.live_stream_job import LiveStreamJob
@@ -53,7 +55,6 @@ from jobs.team_stats_update_job import TeamStatsUpdateJob
 from jobs.venue_list_job import VenueListJob
 from logger import Logger
 from process.producer import Producer  # 确保导入 Producer 类
-from process.consumer import Consumer
 from database import Database
 from task_manager import TaskManager
 import logging
@@ -70,21 +71,17 @@ database.init_db()
 # 创建任务管理器
 task_manager = TaskManager()
 
+http_client = asyncio.run(HttpClient.get_instance())
+
 
 async def run_producer_and_consumer(task_config):
 	producer_tasks = []
 	consumer_tasks = []
 
 	for config in task_config:
-		processing_done_event = asyncio.Event()
-
 		# 创建生产者任务
-		producer = Producer(config['func'], config['interval'], config['identifier'], processing_done_event)
+		producer = Producer(config['func'], config['interval'], config['identifier'],config['process_func'])
 		producer_tasks.append(asyncio.create_task(producer.produce()))
-
-		# 创建消费者任务
-		consumer = Consumer(config['process_func'], processing_done_event, config['identifier'])
-		consumer_tasks.append(asyncio.create_task(consumer.consume()))
 
 	# 等待所有生产者和消费者任务完成
 	await asyncio.gather(*producer_tasks, *consumer_tasks)
@@ -100,24 +97,31 @@ async def main():
 		{'func': coach_list_fetch, 'interval': 60, 'identifier': 'coach_list', 'process_func': CoachJob.run},
 		{'func': match_list_fetch, 'interval': 1, 'identifier': 'match_list', 'process_func': MatchListJob.run},
 		{'func': team_list_fetch, 'interval': 1, 'identifier': 'team_list', 'process_func': TeamListJob.run},
-		{'func': competition_list_fetch, 'interval': 60, 'identifier': 'competition_list','process_func': CompetitionJob.run},
-		{'func': competition_rule_list_fetch, 'interval': 60, 'identifier': 'competition_rule_list','process_func': CompetitionRuleListJob.run},
+		{'func': competition_list_fetch, 'interval': 60, 'identifier': 'competition_list',
+		 'process_func': CompetitionJob.run},
+		{'func': competition_rule_list_fetch, 'interval': 60, 'identifier': 'competition_rule_list',
+		 'process_func': CompetitionRuleListJob.run},
 		{'func': delete_data_fetch, 'interval': 60, 'identifier': 'delete_data', 'process_func': DeleteJob.run},
 		{'func': honor_list_fetch, 'interval': 60, 'identifier': 'honor_list', 'process_func': HonorListJob.run},
-		{'func': live_stream_fetch, 'interval': 10 * 60, 'identifier': 'live_stream', 'process_func': LiveStreamJob.run},
+		{'func': live_stream_fetch, 'interval': 10 * 60, 'identifier': 'live_stream',
+		 'process_func': LiveStreamJob.run},
 		{'func': match_live_fetch, 'interval': 1, 'identifier': 'match_live', 'process_func': MatchLiveJob.run},
-		{'func': match_live_update_fetch, 'interval': 5, 'identifier': 'match_live_update', 'process_func': MatchLiveUpdateJob.run},
+		{'func': match_live_update_fetch, 'interval': 5, 'identifier': 'match_live_update',
+		 'process_func': MatchLiveUpdateJob.run},
 		{'func': more_update_fetch, 'interval': 20, 'identifier': 'more_update', 'process_func': MoreUpdateJob.run},
 		{'func': player_stats_fetch, 'interval': 60, 'identifier': 'player_status', 'process_func': PlayerStatsJob.run},
-		{'func': player_status_update_fetch, 'interval': 1, 'identifier': 'player_status_update','process_func': PlayerStatsUpdateJob.run},
+		{'func': player_status_update_fetch, 'interval': 1, 'identifier': 'player_status_update',
+		 'process_func': PlayerStatsUpdateJob.run},
 		{'func': referee_list_fetch, 'interval': 60, 'identifier': 'referee_list', 'process_func': RefereeListJob.run},
 		{'func': season_list_fetch, 'interval': 60, 'identifier': 'season_list', 'process_func': SeasonListJob.run},
 		{'func': stage_list_fetch, 'interval': 60, 'identifier': 'stage_list', 'process_func': StageListJob.run},
 		{'func': table_detail_fetch, 'interval': 60, 'identifier': 'table_detail', 'process_func': TableDetailJob.run},
 		{'func': team_stats_fetch, 'interval': 60, 'identifier': 'team_stats', 'process_func': TeamStatsJob.run},
-		{'func': team_stats_update_fetch, 'interval': 1, 'identifier': 'team_stats_update', 'process_func': TeamStatsUpdateJob.run},
+		{'func': team_stats_update_fetch, 'interval': 1, 'identifier': 'team_stats_update',
+		 'process_func': TeamStatsUpdateJob.run},
 		{'func': venue_list_fetch, 'interval': 60, 'identifier': 'venue_list', 'process_func': VenueListJob.run},
-		{'func': compesation_list_fetch, 'interval': 60, 'identifier': 'compesation_list', 'process_func': CompensationListJob.run},
+		{'func': compesation_list_fetch, 'interval': 60, 'identifier': 'compesation_list',
+		 'process_func': CompensationListJob.run},
 		{'func': competition_detail_fetch, 'interval': 1, 'identifier': 'competition_detail',
 		 'process_func': CompetitionTableDetailJob.run},
 	]
@@ -125,7 +129,7 @@ async def main():
 	try:
 
 		# 	初始化全量数据
-		await init_data()
+		# await init_data()
 		# 创建并运行生产者和消费者任务
 		producer_tasks, consumer_tasks = await run_producer_and_consumer(task_config)
 
@@ -137,21 +141,7 @@ async def main():
 		logger.error(f"An error occurred: {e}")
 
 
-
 if __name__ == "__main__":
 	asyncio.run(main())
 
-# async def main():
-# 	db = Database()
-# 	session = db.get_session()
-# 	try:
-# 		competition_ids = CompetitionListModel.get_edge_ids(session, 0)
-# 		await CompetitionTableDetailJob.run(competition_ids)
-# 		session.close()
-# 	except Exception as e:
-# 		logger.error(e)
-# 	finally:
-# 		session.close()
-#
-# if __name__ == '__main__':
-# 	asyncio.run(main())
+

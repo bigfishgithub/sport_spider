@@ -1,7 +1,8 @@
+import asyncio
+
 from http_client import HttpClient
 
-http_client = HttpClient()
-
+http_client = asyncio.run(HttpClient.get_instance())
 async def get_language(params):
 	"""获取多语言"""
 	return await http_client.get('/api/v5/football/language/list',params=params)

@@ -12,7 +12,6 @@ async def player_stats_fetch():
 	min_t = max_t - t
 
 	session = None
-	ids = []
 	try:
 		db = Database()
 		session = db.get_session()
